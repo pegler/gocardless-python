@@ -13,6 +13,8 @@ class ResourceMetaClass(type):
     def __new__(meta, name, bases, attrs):
         #resoures inherit date fields from superclasses
         for base in bases:
+            if hasattr(base, "datetime_fields") and "datetime_fields" in attrs:
+                attrs["datetime_fields"].extend(base.datetime_fields)
             if hasattr(base, "date_fields") and "date_fields" in attrs:
                 attrs["date_fields"].extend(base.date_fields)
         return type.__new__(meta, name, bases, attrs)
@@ -35,7 +37,8 @@ class Resource(object):
     """
     __metaclass__ = ResourceMetaClass
 
-    date_fields = ["created_at"]
+    datetime_fields = ["created_at"]
+    date_fields = []
     reference_fields = []
 
     def __init__(self, in_attrs, client):
@@ -72,11 +75,21 @@ class Resource(object):
                 setattr(self, func_name,
                         types.MethodType(res_func, self, self.__class__))
 
-        for fieldname in self.date_fields:
+        for fieldname in self.datetime_fields:
             val = attrs.pop(fieldname)
             if val is not None:
                 setattr(self, fieldname,
                         datetime.datetime.strptime(val, "%Y-%m-%dT%H:%M:%SZ"))
+            else:
+                setattr(self, fieldname, None)
+
+        for fieldname in self.date_fields:
+            if fieldname not in attrs:
+                continue
+            val = attrs.pop(fieldname)
+            if val is not None:
+                setattr(self, fieldname,
+                        datetime.datetime.strptime(val, "%Y-%m-%d").date())
             else:
                 setattr(self, fieldname, None)
 
@@ -124,13 +137,13 @@ class Resource(object):
 
 class Merchant(Resource):
     endpoint = "/merchants/:id"
-    date_fields = ["next_payout_date"]
+    datetime_fields = ["next_payout_date"]
 
 
 class Subscription(Resource):
     endpoint = "/subscriptions/:id"
     reference_fields = ["user_id", "merchant_id"]
-    date_fields = ["expires_at", "next_interval_start"]
+    datetime_fields = ["expires_at", "next_interval_start"]
 
     def cancel(self):
         path = "{0}/cancel".format(self.endpoint.replace(":id", self.id))
@@ -139,7 +152,7 @@ class Subscription(Resource):
 
 class PreAuthorization(Resource):
     endpoint = "/pre_authorizations/:id"
-    date_fields = ["expires_at", "next_interval_start"]
+    datetime_fields = ["expires_at", "next_interval_start"]
     reference_fields = ["user_id", "merchant_id"]
 
     def create_bill(self, amount, name=None, description=None,
@@ -155,7 +168,8 @@ class PreAuthorization(Resource):
 
 class Bill(Resource):
     endpoint = "/bills/:id"
-    date_fields = ["paid_at"]
+    datetime_fields = ["paid_at"]
+    date_fields = ["charge_customer_at"]
     reference_fields = ["merchant_id", "user_id", "payout_id"]
 
     @classmethod
@@ -182,7 +196,7 @@ class Bill(Resource):
 
 class Payout(Resource):
     endpoint = "/payouts/:id"
-    date_fields = ["paid_at"]
+    datetime_fields = ["paid_at"]
 
 class User(Resource):
     endpoint = "/users/:id"

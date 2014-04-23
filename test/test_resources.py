@@ -135,12 +135,12 @@ class FindResourceTestCase(unittest.TestCase):
 
 class TestDateResource(Resource):
     endpoint = "/dates"
-    date_fields = ["modified", "activated"]
+    datetime_fields = ["modified", "activated"]
 
 
 class DateResourceFieldTestCase(unittest.TestCase):
 
-    def test_date_fields_are_converted(self):
+    def test_datetime_fields_are_converted(self):
         mod_date = datetime.datetime.strptime("2020-10-10T01:01:00", "%Y-%m-%dT%H:%M:%S")
         act_date = datetime.datetime.strptime("2020-10-10T01:01:03", "%Y-%m-%dT%H:%M:%S")
         params = {
@@ -155,7 +155,7 @@ class DateResourceFieldTestCase(unittest.TestCase):
 class TestReferenceResource(Resource):
     endpoint = "/referencing"
     reference_fields = ["test_resource_id"]
-    date_fields = []
+    datetime_fields = []
 
 class ReferenceResourceTestCase(unittest.TestCase):
 
@@ -174,7 +174,7 @@ class ReferenceResourceTestCase(unittest.TestCase):
             self.assertEqual("1234", res.test_resource())
             mock_res.assert_called_with("2345", None)
 
-    def test_date_fields_inherited(self):
+    def test_datetime_fields_inherited(self):
         params = create_mock_attrs({"test_resource_id":"123"})
         res = TestReferenceResource(params, None)
         self.assertIsInstance(res.created_at, datetime.datetime)
@@ -182,7 +182,7 @@ class ReferenceResourceTestCase(unittest.TestCase):
     def test_date_with_null_attr_does_not_throw(self):
         params = create_mock_attrs({"modified_at":None})
         testclass = type("TestModResource", (Resource,),
-                {"date_fields":["modified_at"]})
+                {"datetime_fields":["modified_at"]})
         res = testclass(params, None)
 
 

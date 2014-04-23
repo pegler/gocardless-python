@@ -138,11 +138,12 @@ class ClientTestCase(unittest.TestCase):
             expected_path = "/bills"
             expected_params = {
                     "amount":10,
-                    "pre_authorization_id": "someid"
+                    "pre_authorization_id": "someid",
+                    "charge_customer_at": "2013-08-27",
                     }
             mock_bill = resources.Bill(fixtures.bill_json.copy(), self.client)
             mock_post.return_value = fixtures.bill_json
-            res = self.client.create_bill(10, "someid")
+            res = self.client.create_bill(10, "someid", charge_customer_at="2013-08-27")
             mock_post.assert_called_with("/bills",
                     {"bill":expected_params})
             self.assertEqual(res, mock_bill)

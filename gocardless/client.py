@@ -164,7 +164,8 @@ class Client(object):
         """
         return Payout.find_with_client(id, self)
 
-    def create_bill(self, amount, pre_auth_id, name=None, description=None):
+    def create_bill(self, amount, pre_auth_id, name=None,
+                    description=None, charge_customer_at=None):
         """Creates a new bill under an existing pre_authorization
 
         :param amount: The amount to bill
@@ -172,10 +173,11 @@ class Client(object):
           has not expire
         :param name: A name for this bill
         :param description: A description for this bill
+        :param charge_customer_at: When a payment will leave the customer's account
 
         """
-        return Bill.create_under_preauth(amount, pre_auth_id, self,
-                                         name=name, description=description)
+        return Bill.create_under_preauth(amount, pre_auth_id, self, name=name,
+                                         description=description, charge_customer_at=charge_customer_at)
 
     def new_subscription_url(self, amount, interval_length, interval_unit,
                              name=None, description=None, interval_count=None,
